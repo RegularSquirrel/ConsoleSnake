@@ -12,3 +12,6 @@ do
     game.PrintBoard();
     Thread.Sleep(50);
 } while (game.running);
+
+Console.WriteLine("Game over!");
+Console.WriteLine($"Your score: {game.score}  |  High score: {game.highScore}");

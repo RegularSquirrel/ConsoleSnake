@@ -42,8 +42,8 @@ namespace ConsoleSnake
 
         PlayerPos playerFrontPos = new PlayerPos(25, 12);
 
-        int score = 0;
-        int highScore = 0;
+        public int score = 0;
+        public int highScore = 0;
 
         public Direction direction = Direction.Up;
 
