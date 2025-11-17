@@ -34,6 +34,8 @@ namespace ConsoleSnake
 
     public class Game
     {
+        const string highScorefileName = "HighScore.txt";
+
         Tile[,] board = new Tile[25, 50];
 
         List<PlayerPos> player = new List<PlayerPos>();
@@ -41,6 +43,7 @@ namespace ConsoleSnake
         PlayerPos playerFrontPos = new PlayerPos(25, 12);
 
         int score = 0;
+        int highScore = 0;
 
         public Direction direction = Direction.Up;
 
@@ -55,8 +58,33 @@ namespace ConsoleSnake
 
         public Game() { }
 
-        public void InitialiseBoard()
+        public void Initialise()
         {
+            StreamReader sr;
+
+            if(!File.Exists(highScorefileName))
+            {
+                FileStream fs = File.Create(highScorefileName);
+                fs.Close();
+                sr = new StreamReader("HighScore.txt");
+
+            }
+            else
+            {
+               sr = new StreamReader("HighScore.txt");
+            }
+
+            string s = sr.ReadLine();
+
+            try
+            {
+                highScore = int.Parse(s);
+            }catch { highScore = 0;  }
+
+            sr.Close();
+
+
+
             for (int y = 0; y < 25; y++)
             {
                 for (int x = 0; x < 50; x++)
@@ -64,17 +92,23 @@ namespace ConsoleSnake
                     board[y, x] = new Tile(y == 0 || y == 24 || x == 0 || x == 49);
                 }
             }
+
+
+            player.Add(new PlayerPos(25, 12));
+            UpdateBoard();
+
+            PlaceApple();
         }
 
-        public void RunGame()
+        public void Run()
         {
+            Console.Title = "Controls: W, A, S, D";
             running = true;
+
 
             inputThread = new Thread(new ThreadStart(GameLoop));
             inputThread.IsBackground = true;
             inputThread.Start();
-
-
         }
 
         public void GameLoop()
@@ -102,6 +136,7 @@ namespace ConsoleSnake
         public void PrintBoard()
         {
             Console.Clear();
+            
 
             for (int y = 0; y < 25; y++)
             {
@@ -116,11 +151,6 @@ namespace ConsoleSnake
             Console.BackgroundColor = ConsoleColor.Black;
         }
 
-        public void InitilisePlayer()
-        {
-            player.Add(new PlayerPos(25, 12));
-        }
-
         public void SetPlayerDirection(char direction)
         {
             PlayerPos prevPos = playerFrontPos;
@@ -129,22 +159,18 @@ namespace ConsoleSnake
             switch (direction)
             {
                 case 'w':
-                    //playerFrontPos.y--;
                     this.direction = Direction.Up;
                     break;
 
                 case 'a':
-                    //playerFrontPos.x--;
                     this.direction = Direction.Left;
                     break;
 
                 case 's':
-                    //playerFrontPos.y++;
                     this.direction = Direction.Down;
                     break;
 
                 case 'd':
-                    //playerFrontPos.x++;
                     this.direction = Direction.Right;
                     break;
 
@@ -177,9 +203,6 @@ namespace ConsoleSnake
                     playerFrontPos.x++;
                     break;
 
-                default:
-                    break;
-
             }
 
             if (player.Count() > 1)
@@ -198,7 +221,12 @@ namespace ConsoleSnake
                 if (board[playerFrontPos.y, playerFrontPos.x].state == TileState.Apple)
                 {
                     score++;
-                    Console.Title = $"Score: {score}";
+                    if(score > highScore)
+                    {
+                        highScore = score;
+                    }
+
+                    Console.Title = $"Score: {score} | High Score: {highScore}";
 
                     player.Insert(0, new PlayerPos(playerFrontPos));
                     board[playerFrontPos.y, playerFrontPos.x].state = TileState.Snake;
@@ -246,6 +274,12 @@ namespace ConsoleSnake
         public void GameOver()
         {
             //inputThread.Abort();
+
+            StreamWriter sw = new StreamWriter(highScorefileName);
+
+            sw.WriteLine(highScore.ToString());
+            sw.Close();
+
             running = false;
         }
     }
