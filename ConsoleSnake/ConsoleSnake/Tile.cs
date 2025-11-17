@@ -49,7 +49,7 @@ namespace ConsoleSnake
 
             }
 
-            Console.Write(" ");
+            Console.Write("  ");
         }
     }
 }

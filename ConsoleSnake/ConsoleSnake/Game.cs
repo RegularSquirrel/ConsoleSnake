@@ -36,11 +36,11 @@ namespace ConsoleSnake
     {
         const string highScorefileName = "HighScore.txt";
 
-        Tile[,] board = new Tile[25, 50];
+        Tile[,] board = new Tile[25, 25];
 
         List<PlayerPos> player = new List<PlayerPos>();
 
-        PlayerPos playerFrontPos = new PlayerPos(25, 12);
+        PlayerPos playerFrontPos = new PlayerPos(12, 12);
 
         public int score = 0;
         public int highScore = 0;
@@ -87,14 +87,14 @@ namespace ConsoleSnake
 
             for (int y = 0; y < 25; y++)
             {
-                for (int x = 0; x < 50; x++)
+                for (int x = 0; x < 25; x++)
                 {
-                    board[y, x] = new Tile(y == 0 || y == 24 || x == 0 || x == 49);
+                    board[y, x] = new Tile(y == 0 || y == 24 || x == 0 || x == 24);
                 }
             }
 
 
-            player.Add(new PlayerPos(25, 12));
+            player.Add(new PlayerPos(12, 12));
             UpdateBoard();
 
             PlaceApple();
@@ -140,7 +140,7 @@ namespace ConsoleSnake
 
             for (int y = 0; y < 25; y++)
             {
-                for (int x = 0; x < 50; x++)
+                for (int x = 0; x < 25; x++)
                 {
                     board[y, x].Print();
                 }
@@ -260,7 +260,7 @@ namespace ConsoleSnake
             do
             {
                 int y = new Random().Next(23);
-                int x = new Random().Next(48);
+                int x = new Random().Next(23);
 
                 if (board[y, x].state == TileState.Free)
                 {
