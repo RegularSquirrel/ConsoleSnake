@@ -34,37 +34,43 @@ namespace ConsoleSnake
 
     public class Game
     {
-        const string highScorefileName = "HighScore.txt";
+        const int SIZE_X = 25;
+        const int SIZE_Y = 25;
 
-        Tile[,] board = new Tile[25, 25];
+        const string HIGHSCORE_FILE_NAME = "HighScore.txt";
 
+        //Game state
+        public bool running = false;
+
+        //Game board
+        Tile[,] board = new Tile[SIZE_Y, SIZE_X];
+
+        //Input
+        Thread inputThread;
+        char c = 'w';
+        char oldC = 'w';
+        public Direction direction = Direction.Up;
+        Direction prevDirection;
+
+        //Player
         List<PlayerPos> player = new List<PlayerPos>();
+        PlayerPos playerFrontPos;
 
-        PlayerPos playerFrontPos = new PlayerPos(12, 12);
-
+        //Score
         public int score = 0;
         public int highScore = 0;
 
-        public Direction direction = Direction.Up;
-
-        char c = 'w';
-        char oldC = 'w';
-
-        Direction prevDirection;
-
-        Thread inputThread;
-
-        public bool running = false;
-
         public Game() { }
+
+        #region Game functions
 
         public void Initialise()
         {
             StreamReader sr;
 
-            if(!File.Exists(highScorefileName))
+            if(!File.Exists(HIGHSCORE_FILE_NAME))
             {
-                FileStream fs = File.Create(highScorefileName);
+                FileStream fs = File.Create(HIGHSCORE_FILE_NAME);
                 fs.Close();
                 sr = new StreamReader("HighScore.txt");
 
@@ -85,33 +91,54 @@ namespace ConsoleSnake
 
 
 
-            for (int y = 0; y < 25; y++)
+            for (int y = 0; y < SIZE_Y; y++)
             {
-                for (int x = 0; x < 25; x++)
+                for (int x = 0; x < SIZE_X; x++)
                 {
-                    board[y, x] = new Tile(y == 0 || y == 24 || x == 0 || x == 24);
+                    board[y, x] = new Tile(y == 0 || y == SIZE_Y - 1 || x == 0 || x == SIZE_X - 1);
                 }
             }
 
-
-            player.Add(new PlayerPos(12, 12));
+            playerFrontPos = new PlayerPos(SIZE_Y / 2, SIZE_X / 2);
+            player.Add(new PlayerPos(playerFrontPos));
             UpdateBoard();
 
             PlaceApple();
         }
 
-        public void Run()
+        public void Begin()
         {
             Console.Title = "Controls: W, A, S, D";
             running = true;
 
 
-            inputThread = new Thread(new ThreadStart(GameLoop));
+            inputThread = new Thread(new ThreadStart(InputLoop));
             inputThread.IsBackground = true;
             inputThread.Start();
         }
 
-        public void GameLoop()
+        public void Update()
+        {
+            AddPlayerMovement();
+            UpdateBoard();
+            PrintBoard();
+        }
+
+        public void GameOver()
+        {
+            //inputThread.Abort();
+
+            StreamWriter sw = new StreamWriter(HIGHSCORE_FILE_NAME);
+
+            sw.WriteLine(highScore.ToString());
+            sw.Close();
+
+            running = false;
+        }
+        #endregion
+
+        #region Input functions
+        public void InputLoop()
         {
             while (running)
             {
@@ -120,35 +147,9 @@ namespace ConsoleSnake
                 if (c != oldC)
                 {
                     SetPlayerDirection(c);
-                    oldC = c;
+                    //oldC = c;
                 }
             }
-        }
-
-        public void UpdateBoard()
-        {
-            foreach (PlayerPos player in player)
-            {
-                board[player.y, player.x].state = TileState.Snake;
-            }
-        }
-
-        public void PrintBoard()
-        {
-            Console.Clear();
-            
-
-            for (int y = 0; y < 25; y++)
-            {
-                for (int x = 0; x < 25; x++)
-                {
-                    board[y, x].Print();
-                }
-
-                Console.Write("\n");
-            }
-
-            Console.BackgroundColor = ConsoleColor.Black;
         }
 
         public void SetPlayerDirection(char direction)
@@ -160,18 +161,22 @@ namespace ConsoleSnake
             {
                 case 'w':
                     this.direction = Direction.Up;
+                    oldC = 'w';
                     break;
 
                 case 'a':
                     this.direction = Direction.Left;
+                    oldC = 'a';
                     break;
 
                 case 's':
                     this.direction = Direction.Down;
+                    oldC = 's';
                     break;
 
                 case 'd':
                     this.direction = Direction.Right;
+                    oldC = 'd';
                     break;
 
                 default:
@@ -221,7 +226,7 @@ namespace ConsoleSnake
                 if (board[playerFrontPos.y, playerFrontPos.x].state == TileState.Apple)
                 {
                     score++;
-                    if(score > highScore)
+                    if (score > highScore)
                     {
                         highScore = score;
                     }
@@ -251,7 +256,33 @@ namespace ConsoleSnake
                 GameOver();
             }
         }
+        #endregion
 
+        #region Board functions
+        public void UpdateBoard()
+        {
+            foreach (PlayerPos player in player)
+            {
+                board[player.y, player.x].state = TileState.Snake;
+            }
+        }
+
+        public void PrintBoard()
+        {
+            Console.Clear();
+
+            for (int y = 0; y < SIZE_Y; y++)
+            {
+                for (int x = 0; x < SIZE_X; x++)
+                {
+                    board[y, x].Print();
+                }
+
+                Console.Write("\n");
+            }
+
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
 
         public void PlaceApple()
         {
@@ -259,8 +290,8 @@ namespace ConsoleSnake
 
             do
             {
-                int y = new Random().Next(23);
-                int x = new Random().Next(23);
+                int y = new Random().Next(SIZE_Y - 1);
+                int x = new Random().Next(SIZE_X - 1);
 
                 if (board[y, x].state == TileState.Free)
                 {
@@ -270,17 +301,6 @@ namespace ConsoleSnake
 
             } while (placingApple);
         }
-
-        public void GameOver()
-        {
-            //inputThread.Abort();
-
-            StreamWriter sw = new StreamWriter(highScorefileName);
-
-            sw.WriteLine(highScore.ToString());
-            sw.Close();
-
-            running = false;
-        }
+        #endregion
     }
 }

@@ -3,14 +3,12 @@
 Game game = new Game();
 
 game.Initialise();
-game.Run();
+game.Begin();
 
 do
 {
-    game.AddPlayerMovement();
-    game.UpdateBoard();
-    game.PrintBoard();
-    Thread.Sleep(50);
+    game.Update();
+    Thread.Sleep(75);
 } while (game.running);
 
 Console.WriteLine("Game over!");
